@@ -24,7 +24,7 @@ augImdsTrain = augmentedImageDatastore(inputSize, imdsTrain);
 augImdsVal   = augmentedImageDatastore(inputSize, imdsVal);
 
 % 5. Sauvegarde des structures de données pour le script d'entraînement
-saveFile = 'food11_pretraitées_data.mat';
+saveFile = 'food11_preprocessed_data.mat';
 save(saveFile, 'augImdsTrain', 'augImdsVal', 'imdsTrain', 'imdsVal', 'inputSize', 'numClasses');
 
 fprintf("Prétraitement terminé ! Données enregistrées sous : %s\n", saveFile);
