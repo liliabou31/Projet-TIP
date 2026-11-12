@@ -1,67 +1,102 @@
-%% FOOD-11 - APPRENTISSAGE PAR TRANSFER LEARNING (MOBILENETV2 - VERSION SIMPLE)
-clearvars; close all            % Nettoie la mémoire et ferme les fenêtres graphiques pour partir sur une base saine
-rng(42);                        % Fixe la graine aléatoire pour obtenir exactement les mêmes résultats sur PC Intel et NVIDIA
+%% FOOD-11 - Fine-tuning de MobileNetV2 (128x128) avec augmentation de données
+% Pour chaque fonction, la page de documentation s'ouvre avec : doc nomDeLaFonction
+clearvars; close all
 
-%% 1. Paramètres d'entraînement
-netName   = "mobilenetv2";      % Modèle choisi : léger (~2.2M paramètres) et très efficace sur les textures de nourriture
-learnRate = 1e-4;               % Petit taux d'apprentissage (1e-4) pour ajuster en douceur les couches pré-entraînées
-maxEpochs = 6;                  % 6 passages complets sur les données : suffisant pour converger sans sur-apprendre
-miniBatch = 32;                 % Paquets de 32 images : bon compromis entre vitesse de calcul et stabilité de l'apprentissage
+%% 1. Paramètres
+inputSize = [224 224 3];   % taille des images donnée au réseau
+miniBatch = 32;            % voir justification en fin de fichier
+maxEpochs = 8;
+learnRate = 1e-4;          % petit pas : on ajuste un réseau déjà entraîné
 
-%% 2. Données et Data Augmentation (Documentation officielle MATLAB)
-load("food11_pretraitees_data.mat", "imdsTrain", "imdsVal", "inputSize", "numClasses"); % Charge les données déjà redimensionnées (128x128)
-classNames = categories(imdsTrain.Labels); % Récupère la liste des 11 catégories de plats
+%% 2. Données : un dossier par classe, séparation 80 % / 20 %
+% Réf. MATLAB : imageDatastore (LabelSource="foldernames"), splitEachLabel
+rng(0)                     % même séparation à chaque exécution
+imds = imageDatastore("train", IncludeSubfolders=true, LabelSource="foldernames");
+classNames = categories(imds.Labels);
+numClasses = numel(classNames);
+[imdsTrain, imdsVal] = splitEachLabel(imds, 0.8, "randomized");
 
-% Création de l'outil d'augmentation géométrique pour diversifier artificiellement les images d'entraînement
+%% 3. Augmentation (entraînement uniquement) et redimensionnement
+% Réf. MATLAB : imageDataAugmenter, augmentedImageDatastore (ColorPreprocessing="gray2rgb")
 augmenter = imageDataAugmenter( ...
-    'FillValue', 128, ...           % Remplit les bords vides après rotation/décalage en gris neutre (évite les bords noirs)
-    'RandXReflection', true, ...    % Miroir horizontal aléatoire (un plat vu en miroir reste le même plat)
-    'RandRotation', [-15 15], ...   % Légère rotation entre -15° et +15° pour simuler différents angles de prise de vue
-    'RandScale', [0.9 1.1]);        % Zoom léger (90% à 110%) pour s'adapter aux plats pris de près ou de loin
-
-% Applique l'augmentation uniquement sur l'entraînement et force 3 canaux (RVB) si une image est en niveaux de gris
+    RandXReflection=true, ...
+    RandRotation=[-15 15], ...
+    RandScale=[0.9 1.1], ...
+    FillValue=128);
 dsTrain = augmentedImageDatastore(inputSize(1:2), imdsTrain, ...
-    'DataAugmentation', augmenter, 'ColorPreprocessing', 'gray2rgb');
-
-% Prépare les données de validation SANS augmentation (pour évaluer le modèle sur des images réelles non modifiées)
+    DataAugmentation=augmenter, ColorPreprocessing="gray2rgb");
 dsVal = augmentedImageDatastore(inputSize(1:2), imdsVal, ...
-    'ColorPreprocessing', 'gray2rgb');
+    ColorPreprocessing="gray2rgb");
 
-%% 3. Chargement, adaptation et gel partiel du réseau pré-entraîné
-net = imagePretrainedNetwork(netName, NumClasses=numClasses);
+%% 4. Réseau pré-entraîné
+% Réf. MATLAB : imagePretrainedNetwork (NumClasses remplace la dernière couche)
+net = imagePretrainedNetwork("mobilenetv2", NumClasses=numClasses);
 
-% Adapte la taille d'entrée du réseau à nos images 128x128x3
-oldInput = net.Layers(1);
-net = replaceLayer(net, oldInput.Name, imageInputLayer(inputSize, ...
-    "Name", oldInput.Name, "Normalization", oldInput.Normalization, ...
-    "Mean", mean(oldInput.Mean, [1 2]), "StandardDeviation", mean(oldInput.StandardDeviation, [1 2])));
-
-% Gel de la première moitié du réseau via la méthode officielle setLearnRateFactor
-moitie = floor(height(net.Learnables) / 2);
-for i = 1:moitie
-    layerName = net.Learnables.Layer(i);
-    paramName = net.Learnables.Parameter(i);
-    net = setLearnRateFactor(net, layerName, paramName, 0);
+% Le réseau attend 224x224 : on remplace sa couche d'entrée par une couche 128x128x3
+% en gardant sa normalisation. Réf. MATLAB : imageInputLayer, replaceLayer, initialize
+oldInput  = net.Layers(1);
+inputArgs = {"Name", oldInput.Name, "Normalization", oldInput.Normalization};
+if oldInput.Normalization ~= "none"
+    inputArgs = [inputArgs, {"Mean", mean(oldInput.Mean, [1 2])}];
 end
-
-% Initialisation du réseau (obligatoire après replaceLayer)
+if oldInput.Normalization == "zscore"
+    inputArgs = [inputArgs, {"StandardDeviation", mean(oldInput.StandardDeviation, [1 2])}];
+end
+net = replaceLayer(net, oldInput.Name, imageInputLayer(inputSize, inputArgs{:}));
 if ~net.Initialized
     net = initialize(net);
 end
-%% 4. Configuration et lancement de l'entraînement
-options = trainingOptions("adam", ...       % Optimiseur Adam : rapide et efficace pour le fine-tuning
-    InitialLearnRate=learnRate, ...         % Applique le taux d'apprentissage défini plus haut (1e-4)
-    MaxEpochs=maxEpochs, ...                % Nombre total d'époques
-    MiniBatchSize=miniBatch, ...            % Taille des lots d'images traités simultanément
-    L2Regularization=1e-5, ...              % Légère pénalité L2 pour éviter le surentraînement des couches dégelées
-    Shuffle="every-epoch", ...              % Mélange l'ordre des images à chaque époque (évite d'apprendre par classe)
-    ValidationData=dsVal, ...               % Évalue la précision sur le jeu de validation pendant l'entraînement
-    ValidationFrequency=40, ...             % Fréquence de vérification sur la validation (toutes les 40 itérations)
-    Verbose=false, ...                      % Désactive l'affichage texte détaillé dans la console
-    Plots="training-progress", ...          % Affiche la courbe d'évolution de la précision en temps réel
-    Metrics="accuracy");                    % Suit le pourcentage de bonnes prédictions
 
-net = trainnet(dsTrain, net, "crossentropy", options); % Lance l'entraînement avec la fonction de perte standard de classification
+%% 5. Entraînement (fine-tuning de tout le réseau)
+% Réf. MATLAB : trainingOptions, trainnet
+options = trainingOptions("adam", ...
+    InitialLearnRate=learnRate, ...
+    LearnRateSchedule="piecewise", ...   % le pas est divisé par 2 ...
+    LearnRateDropPeriod=3, ...           % ... toutes les 3 époques
+    LearnRateDropFactor=0.5, ...
+    MaxEpochs=maxEpochs, ...
+    MiniBatchSize=miniBatch, ...
+    Shuffle="every-epoch", ...
+    ValidationData=dsVal, ...
+    ValidationFrequency=100, ...
+    ValidationPatience=5, ...            % arrêt si la loss de validation ne s'améliore plus
+    Metrics="accuracy", ...
+    Plots="training-progress", ...
+    Verbose=false);
 
-%% 5. Sauvegarde
-save("modele_food11_entraine.mat", "net", "classNames", "inputSize"); % Enregistre le modèle entraîné pour la phase de test
+net = trainnet(dsTrain, net, "crossentropy", options);
+
+%% 6. Évaluation sur la validation
+% Réf. MATLAB : minibatchpredict, scores2label, confusionmat, confusionchart
+valPred = scores2label(minibatchpredict(net, dsVal), classNames);
+
+C         = confusionmat(imdsVal.Labels, valPred);
+precision = diag(C)' ./ max(sum(C, 1), 1);
+recall    = diag(C)' ./ max(sum(C, 2)', 1);
+f1        = mean(2 * precision .* recall ./ max(precision + recall, eps));
+numParams = sum(cellfun(@numel, net.Learnables.Value));
+
+fprintf("Accuracy validation : %.2f %%\n", 100 * mean(valPred == imdsVal.Labels));
+fprintf("F1 macro            : %.4f\n", f1);
+fprintf("Paramètres          : %.3f M\n", numParams / 1e6);
+
+figure
+cm = confusionchart(imdsVal.Labels, valPred);
+cm.RowSummary = "row-normalized";
+cm.ColumnSummary = "column-normalized";
+cm.Title = "Food-11 - validation";
+
+%% 7. Sauvegarde pour l'étape de test
+save("mobilenetv2_food11.mat", "net", "classNames", "inputSize");
+
+%% Justification des paramètres
+% miniBatch = 32 : MobileNetV2 contient des couches de normalisation par lot
+%   (batchNormalizationLayer) dont les statistiques sont trop bruitées avec 8 images ;
+%   32 est assez stable, tient en mémoire et donne 332 mises à jour par époque
+%   (10 632 images / 32).
+% maxEpochs = 8 : la validation plafonne en général après 3 à 5 époques, mais
+%   trainnet renvoie le réseau à la meilleure loss de validation
+%   (OutputNetwork="best-validation" par défaut), donc des époques en trop
+%   ne dégradent pas le modèle ; ValidationPatience arrête l'entraînement si besoin.
+% learnRate = 1e-4 avec décroissance : fine-tuning, on ne veut pas détruire les
+%   poids pré-entraînés ; la décroissance affine la fin de l'entraînement.
