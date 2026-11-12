@@ -28,27 +28,32 @@ dsVal = augmentedImageDatastore(inputSize(1:2), imdsVal, ...
     'ColorPreprocessing', 'gray2rgb');
 
 %% 3. Chargement, adaptation et gel partiel du réseau pré-entraîné
-% Charge MobileNetV2 pré-entraîné sur ImageNet et remplace automatiquement la sortie par 11 classes (Food-11)
 net = imagePretrainedNetwork(netName, NumClasses=numClasses);
 
-% Adapte la taille d'entrée du réseau à nos images 128x128x3 tout en gardant la normalisation d'origine (zscore)
+% Adapte la taille d'entrée du réseau à nos images 128x128x3
 oldInput = net.Layers(1);
 net = replaceLayer(net, oldInput.Name, imageInputLayer(inputSize, ...
     "Name", oldInput.Name, "Normalization", oldInput.Normalization, ...
     "Mean", mean(oldInput.Mean, [1 2]), "StandardDeviation", mean(oldInput.StandardDeviation, [1 2])));
 
-% Gel de la première moitié du réseau : bloque les filtres de base (contours/couleurs) et laisse les couches profondes s'adapter aux plats
-moitie = floor(height(net.Learnables) / 2);             % Calcule l'indice de la moitié des paramètres du réseau
-for i = 1:moitie                                        % Parcourt uniquement la première moitié
-    net.Learnables.LearnRateFactor(i) = 0;              % Bloque l'apprentissage de cette première moitié
+% Gel de la première moitié du réseau via la méthode officielle setLearnRateFactor
+moitie = floor(height(net.Learnables) / 2);
+for i = 1:moitie
+    layerName = net.Learnables.Layer(i);
+    paramName = net.Learnables.Parameter(i);
+    net = setLearnRateFactor(net, layerName, paramName, 0);
 end
 
+% Initialisation du réseau (obligatoire après replaceLayer)
+if ~net.Initialized
+    net = initialize(net);
+end
 %% 4. Configuration et lancement de l'entraînement
 options = trainingOptions("adam", ...       % Optimiseur Adam : rapide et efficace pour le fine-tuning
     InitialLearnRate=learnRate, ...         % Applique le taux d'apprentissage défini plus haut (1e-4)
     MaxEpochs=maxEpochs, ...                % Nombre total d'époques
     MiniBatchSize=miniBatch, ...            % Taille des lots d'images traités simultanément
-    L2Regularization=1e-4, ...              % Légère pénalité L2 pour éviter le surentraînement des couches dégelées
+    L2Regularization=1e-5, ...              % Légère pénalité L2 pour éviter le surentraînement des couches dégelées
     Shuffle="every-epoch", ...              % Mélange l'ordre des images à chaque époque (évite d'apprendre par classe)
     ValidationData=dsVal, ...               % Évalue la précision sur le jeu de validation pendant l'entraînement
     ValidationFrequency=40, ...             % Fréquence de vérification sur la validation (toutes les 40 itérations)
