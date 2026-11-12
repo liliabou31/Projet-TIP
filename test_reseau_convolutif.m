@@ -90,6 +90,7 @@ analyzeNetwork(layers);
 % 5. Lancement de l'Entraînement
 fprintf("Début de l'entraînement avec trainnet...\n");
 net = trainnet(augImdsTrain, layers, "crossentropy", options);
+save("test_reseau_convolutif.mat", "net");   % Sauvegarde du réseau entraîné (évaluation dans test_chaine_complete.m)
 
 % 6. Évaluation des Performances
 fprintf("\n=========================================\n");

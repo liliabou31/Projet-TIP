@@ -16,6 +16,7 @@ imdsFull = imageDatastore('train', ...
 
 % 3. Séparation stratifiée 80% Entraînement / 20% Validation
 fprintf("Séparation 80/20...\n");
+rng(42);    
 [imdsTrain, imdsVal] = splitEachLabel(imdsFull, 0.8, 'randomized');
 
 % 4. Redimensionnement automatique aux dimensions attendues (64x64x3)

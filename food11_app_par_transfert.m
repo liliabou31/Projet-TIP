@@ -5,10 +5,10 @@ clearvars; close all
 netName   = "efficientnetb0";
 learnRate = 1e-4;
 maxEpochs = 8;
-miniBatch = 64;
+miniBatch = 32;
 
 %% 2. Données
-load("food11_pretraitees_data.mat", "imdsTrain", "imdsVal", "inputSize", "numClasses");
+load("food11_preprocessed_data.mat", "imdsTrain", "imdsVal", "inputSize", "numClasses");
 classNames = categories(imdsTrain.Labels);
 
 % Entraînement : images augmentées à chaque lecture. Validation : redimensionnement seul.
