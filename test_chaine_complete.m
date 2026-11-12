@@ -7,9 +7,9 @@ modeleJson  = "chờ xem kết quả csv rồi chọn 1 tên trùng với cột 
 
 % nom (unique)          fichier du réseau (contient net)   fichier .mat du split utilisé à l'entraînement
 modeles = [
-    %"test_reseau_convolutif",  "test_reseau_convolutif.mat",  "food11_preprocessed_data.mat"
-    %"reseau_simple",           "reseau_simple.mat",           "food11_preprocessed_data.mat"
-    "modele_food11_entraine",  "modele_food11_entraine.mat",  "food11_preprocessed_data.mat"
+    "test_reseau_convolutif",  "test_reseau_convolutif.mat",  "food11_preprocessed_data.mat"
+    "reseau_simple",           "reseau_simple.mat",           "food11_preprocessed_data.mat"
+    %"modele_food11_entraine",  "modele_food11_entraine.mat",  "food11_preprocessed_data.mat"
 ];
 
 
