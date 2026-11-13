@@ -82,7 +82,7 @@ analyzeNetwork(layers);
 % 5. Lancement de l'Entraînement
 fprintf("Début de l'entraînement avec trainnet...\n");
 net = trainnet(augImdsTrain, layers, "crossentropy", options);
-save("reseau_simple.mat", "net"); 
+save("reseau_simple.mat", "net", "imdsVal");
 % 6. Évaluation des Performances
 fprintf("\n=========================================\n");
 fprintf("      ÉVALUATION SUR FOOD-11             \n");
