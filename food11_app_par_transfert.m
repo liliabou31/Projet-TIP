@@ -49,7 +49,7 @@ options = trainingOptions("adam", ...
 net = trainnet(dsTrain, net, "crossentropy", options);
 
 %% 6. Sauvegarde (pour l'étape de test)
-save("modele_food11_entraine.mat", "net", "classNames", "inputSize");
+save("modele_food11_entraine_v1.mat", "net", "classNames", "inputSize");
 
 %% Fonction locale (doit rester à la fin du script)
 function [dataOut, info] = augmentationFood(dataIn, info, tailleCible)
