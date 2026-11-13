@@ -66,28 +66,11 @@ options = trainingOptions("adam", ...
 
 net = trainnet(dsTrain, net, "crossentropy", options);
 
-%% 6. Évaluation sur la validation
-% Réf. MATLAB : minibatchpredict, scores2label, confusionmat, confusionchart
-valPred = scores2label(minibatchpredict(net, dsVal), classNames);
-
-C         = confusionmat(imdsVal.Labels, valPred);
-precision = diag(C)' ./ max(sum(C, 1), 1);
-recall    = diag(C)' ./ max(sum(C, 2)', 1);
-f1        = mean(2 * precision .* recall ./ max(precision + recall, eps));
-numParams = sum(cellfun(@numel, net.Learnables.Value));
-
-fprintf("Accuracy validation : %.2f %%\n", 100 * mean(valPred == imdsVal.Labels));
-fprintf("F1 macro            : %.4f\n", f1);
-fprintf("Paramètres          : %.3f M\n", numParams / 1e6);
-
-figure
-cm = confusionchart(imdsVal.Labels, valPred);
-cm.RowSummary = "row-normalized";
-cm.ColumnSummary = "column-normalized";
-cm.Title = "Food-11 - validation";
-
-%% 7. Sauvegarde pour l'étape de test
-save("mobilenetv2_food11.mat", "net", "classNames", "inputSize");
+%% 6. Sauvegarde pour l'étape de test
+% L'évaluation (matrice de confusion, F1, frugalité) est faite par evaluateModel.m,
+% appelé depuis test_chaine_complete.m. imdsVal est sauvegardé pour évaluer
+% le réseau sur exactement la même validation que pendant l'entraînement.
+save("mobilenetv2_food11.mat", "net", "classNames", "inputSize", "imdsVal");
 
 %% Justification des paramètres
 % miniBatch = 32 : MobileNetV2 contient des couches de normalisation par lot

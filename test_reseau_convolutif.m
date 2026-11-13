@@ -4,7 +4,7 @@
 clear; clc;
 
 % 1. Chargement des données pré-traitées
-dataFile = 'food11_preprocessed_data.mat';
+dataFile = 'food11_pretraitees_data.mat';
 if ~exist(dataFile, 'file')
     error("Le fichier %s n'existe pas. Exécutez d'abord pretraitement_data.m.", dataFile);
 end
@@ -90,7 +90,7 @@ analyzeNetwork(layers);
 % 5. Lancement de l'Entraînement
 fprintf("Début de l'entraînement avec trainnet...\n");
 net = trainnet(augImdsTrain, layers, "crossentropy", options);
-
+save("test_reseau_convolutif.mat", "net", "inputSize", "imdsVal");
 % 6. Évaluation des Performances
 fprintf("\n=========================================\n");
 fprintf("      ÉVALUATION SUR FOOD-11             \n");
