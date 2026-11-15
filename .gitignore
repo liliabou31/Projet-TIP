@@ -1,5 +1,5 @@
 test
 train
 data_train
-image/
-json/
+image
+json
