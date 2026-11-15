@@ -13,7 +13,7 @@ fprintf("Chargement des données prétraitées depuis %s...\n", dataFile);
 load(dataFile); 
 
 % 2. Hyperparamètres d'entraînement
-maxEpochs = 10;
+maxEpochs = 30;
 miniBatchSize = 64;
 smoothingWindow = 10;
 
@@ -30,8 +30,14 @@ if exist('makeCourseProgressOutputFcn', 'file')
         Shuffle="every-epoch", ...
         MiniBatchSize=miniBatchSize, ...
         L2Regularization=0.0001, ...
+        LearnRateSchedule="piecewise", ...
+        LearnRateDropFactor=0.3, ...
+        LearnRateDropPeriod=10, ...
         ValidationData=augImdsVal, ...
         ValidationFrequency=valFrequency, ...
+        ValidationPatience=8, ...        % arrêt anticipé si la val. loss stagne
+        CheckpointPath=pwd, ...            % sauvegarde en cas de plantage
+        CheckpointFrequency=2, ...
         Verbose=false, ...
         Plots="training-progress", ...
         OutputFcn=progressFcn, ...
@@ -43,6 +49,9 @@ else
         Shuffle="every-epoch", ...
         MiniBatchSize=miniBatchSize, ...
         L2Regularization=0.0001, ...
+        LearnRateSchedule="piecewise", ...
+        LearnRateDropFactor=0.3, ...
+        LearnRateDropPeriod=10, ...
         ValidationData=augImdsVal, ...
         ValidationFrequency=valFrequency, ...
         Verbose=false, ...
@@ -58,29 +67,43 @@ layers = [
     convolution2dLayer(3, 32, Padding="same", Name="conv1")
     batchNormalizationLayer(Name="bn1")
     reluLayer(Name="relu1")
+    convolution2dLayer(3, 32, Padding="same", Name="conv1.2")
+    batchNormalizationLayer(Name="bn1.2")
+    reluLayer(Name="relu1.2")
     maxPooling2dLayer(2, Stride=2, Name="pool1")
     
     % Bloc 2 : 64x64 -> 32x32
     convolution2dLayer(3, 64, Padding="same", Name="conv2")
     batchNormalizationLayer(Name="bn2")
     reluLayer(Name="relu2")
+    convolution2dLayer(3, 64, Padding="same", Name="conv2.2")
+    batchNormalizationLayer(Name="bn2.2")
+    reluLayer(Name="relu2.2")
     maxPooling2dLayer(2, Stride=2, Name="pool2")
+
     
     % Bloc 3 : 32x32 -> 16x16
     convolution2dLayer(3, 128, Padding="same", Name="conv3")
     batchNormalizationLayer(Name="bn3")
     reluLayer(Name="relu3")
+    convolution2dLayer(3, 128, Padding="same", Name="conv3.2")
+    batchNormalizationLayer(Name="bn3.2")
+    reluLayer(Name="relu3.2")
     maxPooling2dLayer(2, Stride=2, Name="pool3")
+
     
     % Bloc 4 : 16x16 -> 8x8
     convolution2dLayer(3, 256, Padding="same", Name="conv4")
     batchNormalizationLayer(Name="bn4")
     reluLayer(Name="relu4")
-    maxPooling2dLayer(2, Stride=2, Name="pool4")
+    convolution2dLayer(3, 256, Padding="same", Name="conv4.2")
+    batchNormalizationLayer(Name="bn4.2")
+    reluLayer(Name="relu4.2")
     
     
     % Tête de Classification
-    dropoutLayer(0.5, Name="drop")
+    globalAveragePooling2dLayer(Name="gap")
+    dropoutLayer(0.3, Name="drop")
     fullyConnectedLayer(numClasses, Name="fc_out")
     softmaxLayer(Name="softmax")
 ];
