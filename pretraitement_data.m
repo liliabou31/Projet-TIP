@@ -4,15 +4,13 @@
 clear; clc;
 
 % 1. Hyperparamètres de dimension
-fprintf("les images sont redimensionnées en (64,64,3), peut être modifié\n")
-inputSize = [64 64 3];
+fprintf("les images sont redimensionnées en (128,128,3), peut être modifié\n")
+inputSize = [224 224 3];
 numClasses = 11;
 
 % 2. Chargement du dossier principal
 fprintf("Chargement du datastore complet...\n");
-imdsFull = imageDatastore('train', ...
-    'IncludeSubfolders', true, ...
-    'LabelSource', 'foldernames');
+imdsFull = imageDatastore('train', 'IncludeSubfolders', true, 'LabelSource', 'foldernames');
 
 % 3. Séparation stratifiée 80% Entraînement / 20% Validation
 fprintf("Séparation 80/20...\n");
@@ -24,7 +22,7 @@ augImdsTrain = augmentedImageDatastore(inputSize, imdsTrain);
 augImdsVal   = augmentedImageDatastore(inputSize, imdsVal);
 
 % 5. Sauvegarde des structures de données pour le script d'entraînement
-saveFile = 'food11_pretraitées_data.mat';
+saveFile = 'food11_pretraitees_data.mat';
 save(saveFile, 'augImdsTrain', 'augImdsVal', 'imdsTrain', 'imdsVal', 'inputSize', 'numClasses');
 
 fprintf("Prétraitement terminé ! Données enregistrées sous : %s\n", saveFile);
