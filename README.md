@@ -1,10 +1,10 @@
 # Guide de Configuration : Classification Food-11 sur MATLAB
 
-Ce projet est découpé en deux scripts M-file pour séparer la préparation des données et l'apprentissage automatique :
+Ce projet est découpé en trois scripts M-file pour séparer la préparation des données et l'apprentissage des modèles :
 
 1. **`pretraitement_data.m`** : Charge les images, effectue le split 80/20 et génère le fichier de données.
-2. **`test_reseau_convolutif.m`** : Charge les données prétraitées, définit l'architecture du réseau et lance l'entraînement.
-
+2. **`test_reseau_convolutif.m`** : Charge les données prétraitées, définit l'architecture du réseau convolutif entraîné de 0 et lance l'entraînement.
+3. **`food11_app_par_transfert.m`** : Charge les données prétraitées, définit l'architecture du réseau entraîner par transfert d'apprentissage, et lance l'entraînement.
 ---
 
 ## 1. Modifiables dans `pretraitement_data.m`
@@ -71,7 +71,7 @@ Ce fichier contrôle la structure du modèle et les hyperparamètres d'apprentis
 
 1. Lancez **`pretraitement_data.m`** (à exécuter une première fois pour générer `food11_pretraitees_data.mat`).
 2. a) Lancez **`test_reseau_convolutif.m`** (pour entraîner un réseau neuronal convolutif de zéro).
-2. b) Lancez **`food11_app_par_transfert` (pour entraîner un réseau via transfert d'apprentissage)
+2. b) Lancez **`food11_app_par_transfert.m` (pour entraîner un réseau via transfert d'apprentissage)
 3. Modifiez `modeleJson` dans `test_chaine_complete.m` pour évaluer le modèle de votre choix (après l'avoir entrainé). Exemple: `modeleJson = "mobilenetv2_food11;`
 4. Lancez **`test_chaine_complete.m` pour évaluer le modèle sélectionné à l'étape 3. Ce script évalue les performances du modèle via différentes métriques (F1, accuracy, frugality...), génère la matrice de confusion, ainsi qu'un fichier json avec les résultats de la classification des images de test.
 
