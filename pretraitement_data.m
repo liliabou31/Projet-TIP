@@ -5,7 +5,7 @@ clear; clc;
 
 % 1. Hyperparamètres de dimension
 fprintf("les images sont redimensionnées en (128,128,3), peut être modifié\n")
-inputSize = [128 128 3];
+inputSize = [224 224 3];
 numClasses = 11;
 
 % 2. Chargement du dossier principal
