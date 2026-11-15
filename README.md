@@ -69,10 +69,10 @@ Ce fichier contrôle la structure du modèle et les hyperparamètres d'apprentis
 
 ## 🚀 Ordre d'exécution
 
-1. Lancez **`pretraitement_data.m`** (à exécuter une première fois pour générer `food11_pretraitees_data.mat`).
-2. a) Lancez **`test_reseau_convolutif.m`** (pour entraîner un réseau neuronal convolutif de zéro).
-2. b) Lancez **`food11_app_par_transfert.m` (pour entraîner un réseau via transfert d'apprentissage)
+1. Lancez `pretraitement_data.m` (à exécuter une première fois pour générer `food11_pretraitees_data.mat`).
+2. a) Lancez `test_reseau_convolutif.m` (pour entraîner un réseau neuronal convolutif de zéro).
+2. b) Lancez `food11_app_par_transfert.m` (pour entraîner un réseau via transfert d'apprentissage)
 3. Modifiez `modeleJson` dans `test_chaine_complete.m` pour évaluer le modèle de votre choix (après l'avoir entrainé). Exemple: `modeleJson = "mobilenetv2_food11;`. Et mettez `genererJson = true` pour obtenir la matrice de confusion et json, sinon `false`.
-4. Lancez **`test_chaine_complete.m` pour évaluer le modèle sélectionné à l'étape 3. Ce script évalue les performances du modèle via différentes métriques (F1, accuracy, frugality...), génère la matrice de confusion, ainsi qu'un fichier json avec les résultats de la classification des images de test.
+4. Lancez `test_chaine_complete.m` pour évaluer le modèle sélectionné à l'étape 3. Ce script évalue les performances du modèle via différentes métriques (F1, accuracy, frugality...), génère la matrice de confusion, ainsi qu'un fichier json avec les résultats de la classification des images de test.
 
 # ATTENTION : Pour lancer les programmes vous devez avoir les données de pré-enregistrées dans le dossier courant donc vous devez avoir les dossiers **`test`** et **`train`**
