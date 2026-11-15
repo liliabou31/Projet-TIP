@@ -3,12 +3,19 @@ clear; close all
 
 dossierTest = "test";       % 3097 images sans label
 genererJson = true;        % true uniquement pour le réseau retenu
-modeleJson  = "transfert_mobilenetv2";
+modeleJson  = "mobilenetv2_food11";
 
 % nom (unique)          fichier du réseau (contient net)   fichier .mat du split utilisé à l'entraînement
 modeles = [
-    "test_reseau_convolutif", "test_reseau_convolutif.mat", "test_reseau_convolutif.mat"
-    "transfert_mobilenetv2",     "transfert_mobilenetv2.mat",     "transfert_mobilenetv2.mat"
+    %"test_reseau_convolutif", "test_reseau_convolutif.mat", "test_reseau_convolutif.mat"
+    %"transfert_mobilenetv2",     "transfert_mobilenetv2.mat",     "transfert_mobilenetv2.mat"
+    %"modele_food11_efficientb0", "modele_food11_efficientb0.mat", "modele_food11_efficientb0.mat"
+    %"modele_food11_mobilenetv2_version2", "modele_food11_mobilenetv2_version2.mat", "modele_food11_mobilenetv2_version2.mat"
+    %"efficientb0_v2","efficientb0_v2.mat","efficientb0_v2.mat"
+    %"transfert_mobilenetv2","transfert_mobilenetv2.mat","transfert_mobilenetv2.mat"
+    %"transfert_mobilenetv2", "transfert_mobilenetv2.mat", "transfert_mobilenetv2.mat"
+    %"mobilenetv2_food11", "mobilenetv2_food11.mat", "mobilenetv2_food11.mat"
+    "mobilenetv2_food11", "mobilenetv2_food11.mat", "mobilenetv2_food11.mat"
 ];
 
 
